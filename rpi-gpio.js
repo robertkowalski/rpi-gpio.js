@@ -74,14 +74,18 @@ Gpio.prototype.changePins = function() {
 /**
  * Detects if the Raspberry Pi is version 2
  */
-Gpio.prototype.setRaspberryVersion = function() {
-    var data = (fs.readFileSync('/proc/cpuinfo', 'utf8')).trim();
+Gpio.prototype.setRaspberryVersion = function(cb) {
+    var self = this;
+    fs.readFile('/proc/cpuinfo', 'utf8', function(err, data) {
+        data = data.trim();
 
-    if (data == '4' || data == '5' || data == '6') {
-        this.version = 2;
-    } else {
-        this.version = 1;
-    }
+        if (data == '4' || data == '5' || data == '6') {
+            self.version = 2;
+        } else {
+            self.version = 1;
+        }
+        cb();
+    });
 };
 
 /**
@@ -120,37 +124,37 @@ Gpio.prototype.setup = function(channel, direction, cb /*err*/) {
         return cb(new Error('Cannot set invalid direction'));
     }
 
-    this.setRaspberryVersion();
-
-    if (this.version === 2) {
-        this.changePins();
-    }
-
-    var pin = this.getPin(channel);
-
     var self = this;
-    function doExport() {
-        exportPin(pin, function() {
-            self.exportedPins[pin] = true;
-            self.emit('export', channel);
-            setListener(pin, function() {
-                self.read(channel, function(err, value) {
-                    if (err) return cb(err);
-                    self.emit('change', channel, value);
-                });
-            });
-            setDirection(pin, direction, cb);
-        });
-    }
-
-    // Unexport pin if already open
-    isExported(pin, function(isOpen) {
-        if (isOpen) {
-            unexportPin(pin, doExport);
-        } else {
-            doExport();
+    this.setRaspberryVersion(function() {
+        if (self.version === 2) {
+            self.changePins();
         }
-    }.bind(this));
+
+        var pin = self.getPin(channel);
+
+        function doExport() {
+            exportPin(pin, function() {
+                self.exportedPins[pin] = true;
+                self.emit('export', channel);
+                setListener(pin, function() {
+                    self.read(channel, function(err, value) {
+                        if (err) return cb(err);
+                        self.emit('change', channel, value);
+                    });
+                });
+                setDirection(pin, direction, cb);
+            });
+        }
+
+        // Unexport pin if already open
+        isExported(pin, function(isOpen) {
+            if (isOpen) {
+                unexportPin(pin, doExport);
+            } else {
+                doExport();
+            }
+        }.bind(self));
+    });
 };
 
 /**

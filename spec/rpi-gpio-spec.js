@@ -8,7 +8,7 @@ describe('rpi-gpio', function() {
         // Use BCM by default to avoid dealing with pin mapping
         gpio.reset();
         gpio.setMode(gpio.MODE_BCM);
-        gpio.setRaspberryVersion = function() {};
+        gpio.setRaspberryVersion = function(cb) { cb(); };
         gpio.version = 1;
     });
 
