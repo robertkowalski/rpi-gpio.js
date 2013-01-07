@@ -65,9 +65,9 @@ Gpio.prototype.MODE_BCM = function(channel) {
 /**
  * Changes the necessary pins for the Raspberry V2
  */
-Gpio.prototype.changePins = function() {
-    Object.keys(changedPinsV2).forEach(function(index) {
-        pins[index] = changedPinsV2[index];
+Gpio.prototype.changePins = function(newScheme) {
+    Object.keys(newScheme).forEach(function(index) {
+        pins[index] = newScheme[index];
     });
 };
 
@@ -127,7 +127,7 @@ Gpio.prototype.setup = function(channel, direction, cb /*err*/) {
     var self = this;
     this.setRaspberryVersion(function() {
         if (self.version === 2) {
-            self.changePins();
+            self.changePins(changedPinsV2);
         }
 
         var pin = self.getPin(channel);
