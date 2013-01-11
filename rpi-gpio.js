@@ -78,7 +78,7 @@ Gpio.prototype.setRaspberryVersion = function(cb) {
     var self = this;
     fs.readFile('/proc/cpuinfo', 'utf8', function(err, data) {
 
-        data = this.parseCpuinfo(data);
+        data = self.parseCpuinfo(data);
         data = data.trim().slice(-1);
 
         if (data == '2' || data == '3') {
