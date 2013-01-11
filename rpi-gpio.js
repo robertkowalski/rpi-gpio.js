@@ -72,20 +72,31 @@ Gpio.prototype.changePins = function(newScheme) {
 };
 
 /**
- * Detects if the Raspberry Pi is version 2
+ * Sets the version of the model
  */
 Gpio.prototype.setRaspberryVersion = function(cb) {
     var self = this;
     fs.readFile('/proc/cpuinfo', 'utf8', function(err, data) {
-        data = data.trim();
 
-        if (data == '4' || data == '5' || data == '6') {
-            self.version = 2;
-        } else {
+        data = this.parseCpuinfo(data);
+        data = data.trim().slice(-1);
+
+        if (data == '2' || data == '3') {
             self.version = 1;
+        } else {
+            self.version = 2;
         }
         cb();
     });
+};
+
+/**
+ * Detects if the Raspberry Pi is version 2
+ */
+Gpio.prototype.parseCpuinfo = function(data) {
+    var res = data.split('Revision')[1].trim();
+
+    return res[2] + res[3] + res[4] + res[5];
 };
 
 /**
